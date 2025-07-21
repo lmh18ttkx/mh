@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>用户信息输入</title>
+  <style>
+    body {
+      font-family: "微软雅黑", sans-serif;
+      background-color: #f0f8ff;
+      padding: 40px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input[type="text"], input[type="number"], textarea, select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+    }
+    .error {
+      color: red;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .gender, .hobbies {
+      margin-top: 5px;
+    }
+    .gender label, .hobbies label {
+      margin-right: 15px;
+      font-weight: normal;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #43a047;
+    }
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      border-top: 2px solid #ccc;
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>用户信息填写表单</h2>
+  <form id="infoForm">
+    <label>名称*</label>
+    <input type="text" id="name" required>
+    <div class="error" id="errorName"></div>
+
+    <label>年龄*（10~100）</label>
+    <input type="number" id="age" required>
+    <div class="error" id="errorAge"></div>
+
+    <label>性别*</label>
+    <div class="gender">
+      <label><input type="radio" name="gender" value="男"> 男</label>
+      <label><input type="radio" name="gender" value="女"> 女</label>
+    </div>
+    <div class="error" id="errorGender"></div>
+
+    <label>地址</label>
+    <textarea id="address" rows="3"></textarea>
+
+    <label>城市</label>
+    <select id="city">
+      <option value="">--请选择城市--</option>
+      <option>北京</option>
+      <option>上海</option>
+      <option>广州</option>
+      <option>深圳</option>
+      <option>杭州</option>
+    </select>
+
+    <label>邮政编码*（6位数字）</label>
+    <input type="text" id="zipcode" required>
+    <div class="error" id="errorZip"></div>
+
+    <label>爱好</label>
+    <div class="hobbies">
+      <label><input type="checkbox" value="看电影"> 看电影</label>
+      <label><input type="checkbox" value="唱歌"> 唱歌</label>
+      <label><input type="checkbox" value="听音乐"> 听音乐</label>
+      <label><input type="checkbox" value="阅读"> 阅读</label>
+      <label><input type="checkbox" value="户外运动"> 户外运动</label>
+      <label><input type="checkbox" value="室内运动"> 室内运动</label>
+    </div>
+
+    <button type="submit">提交</button>
+  </form>
+
+  <div class="result" id="result" style="display:none;"></div>
+</div>
+
+<script>
+  const form = document.getElementById('infoForm');
+  const resultBox = document.getElementById('result');
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // 获取值
+    const name = document.getElementById('name').value.trim();
+    const age = parseInt(document.getElementById('age').value);
+    const gender = document.querySelector('input[name="gender"]:checked');
+    const address = document.getElementById('address').value.trim();
+    const city = document.getElementById('city').value;
+    const zip = document.getElementById('zipcode').value.trim();
+    const hobbies = [...document.querySelectorAll('.hobbies input:checked')].map(cb => cb.value);
+
+    // 错误清除
+    document.getElementById('errorName').textContent = "";
+    document.getElementById('errorAge').textContent = "";
+    document.getElementById('errorGender').textContent = "";
+    document.getElementById('errorZip').textContent = "";
+
+    let isValid = true;
+
+    // 校验名称
+    if (!name) {
+      document.getElementById('errorName').textContent = "名称不能为空";
+      isValid = false;
+    }
+
+    // 校验年龄
+    if (isNaN(age) || age < 10 || age > 100) {
+      document.getElementById('errorAge').textContent = "年龄必须是10~100之间的数字";
+      isValid = false;
+    }
+
+    // 校验性别
+    if (!gender) {
+      document.getElementById('errorGender').textContent = "请选择性别";
+      isValid = false;
+    }
+
+    // 校验邮政编码
+    if (!/^\d{6}$/.test(zip)) {
+      document.getElementById('errorZip').textContent = "邮政编码必须是6位数字";
+      isValid = false;
+    }
+
+    if (!isValid) return;
+
+    // 展示结果
+    resultBox.style.display = "block";
+    resultBox.innerHTML = `
+      <h3>你提交的信息如下：</h3>
+      <p><strong>名称：</strong> ${name}</p>
+      <p><strong>年龄：</strong> ${age}</p>
+      <p><strong>性别：</strong> ${gender.value}</p>
+      <p><strong>地址：</strong> ${address || '（未填写）'}</p>
+      <p><strong>城市：</strong> ${city || '（未选择）'}</p>
+      <p><strong>邮政编码：</strong> ${zip}</p>
+      <p><strong>爱好：</strong> ${hobbies.length ? hobbies.join("、") : '（无）'}</p>
+    `;
+  });
+</script>
+
+</body>
+</html>
