@@ -1,0 +1,316 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MySQL Movie Management</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    li { margin: 4px 0; }
+    button { margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <center><h1>Movie Data from MySQL</h1></center>
+
+  <h2>Movies List</h2>
+  <ul id="movieList"></ul>
+
+  <h2>Search Movies</h2>
+  <form id="searchForm">
+    <input type="text" id="searchInput" placeholder="Search by title" required/>
+    <button type="submit">Search</button>
+  </form>
+
+  <h2>Add Movie</h2>
+  <form id="addMovieForm">
+    <input type="text" id="movieInput" placeholder="Enter movie title" required />
+    <button type="submit">Add Movie</button>
+  </form>
+
+  
+  <script>
+    const movieList = document.getElementById('movieList');
+    const addForm = document.getElementById('addMovieForm');
+    const movieInput = document.getElementById('movieInput');
+    const searchInput = document.getElementById('searchInput');
+    let allMovies = []; 
+
+    // 获取所有电影
+    function getAllMovies() {
+      fetch('/movies')
+        .then(res => res.json())
+        .then(movies => {
+          movieList.innerHTML = '';
+          movies.forEach(movie => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+              ${movie.title}
+              <button onclick="updateMovie(${movie.id}, '${movie.title}')">Update</button>
+              <button onclick="deleteMovie(${movie.id})">Delete</button>
+            `;
+            movieList.appendChild(li);
+          });
+        });
+    }
+
+    // 添加电影
+    addForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const title = movieInput.value.trim();
+      if (!title) return;
+
+      fetch('/movies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title })
+      })
+      .then(res => res.json())
+      .then(() => {
+        movieInput.value = '';  // 清空输入框
+        getAllMovies();         // 刷新列表
+      });
+    });
+
+    // 搜索电影
+    function searchMovies(query) {
+      const filteredMovies = allMovies.filter(movie => movie.title.toLowerCase().includes(query.toLowerCase()));
+      displayMovies(filteredMovies);
+    }
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.trim();
+      if (query) {
+        searchMovies(query);
+      } else {
+        displayMovies(allMovies); // 显示所有电影
+      }
+    });
+    // 显示电影列表
+    function displayMovies(movies) {
+      movieList.innerHTML = '';
+      movies.forEach(movie => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          ${movie.title}
+          <button onclick="updateMovie(${movie.id}, '${movie.title}')">Update</button>
+          <button onclick="deleteMovie(${movie.id})">Delete</button>
+        `;
+        movieList.appendChild(li);
+      });
+    }
+
+    // 更新电影
+    function updateMovie(id, currentTitle) {
+      const newTitle = prompt("Enter new title:", currentTitle);
+      if (!newTitle) return;
+
+      fetch(`/movies/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle })
+      })
+      .then(() => getAllMovies());
+    }
+
+    // 删除电影
+    function deleteMovie(id) {
+      if (!confirm('Are you sure you want to delete this movie?')) return;
+
+      fetch(`/movies/${id}`, {
+        method: 'DELETE'
+      })
+      .then(() => getAllMovies());
+    }
+
+    // 页面加载时获取所有电影
+    getAllMovies();
+  </script>
+</body>
+</html>
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MySQL Movie Management</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7fa; }
+    h1 { text-align: center; color: #333; }
+    h2 { color: #555; }
+    
+    /* Input Fields */
+    input[type="text"] {
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      width: 250px;
+    }
+
+    /* Buttons */
+    button {
+      padding: 8px 12px;
+      font-size: 16px;
+      background-color: #5c6bc0;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    button:hover {
+      background-color: #3f51b5;
+    }
+
+    /* Movie List */
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      background-color: #fff;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Movie Item */
+    .movie-item {
+      font-size: 18px;
+      color: #333;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Search Box */
+    #searchBox {
+      width: 250px;
+      margin-bottom: 20px;
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+    }
+
+    /* Container for Buttons */
+    .btn-container {
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <center><h1>Movie Management</h1></center>
+
+  <!-- Search Box -->
+  <input type="text" id="searchBox" placeholder="Search movies..." oninput="searchMovies()" />
+  <button type="submit" onclick="searchMovies()">Search</button>
+  <h2>Movies</h2>
+  <ul id="movieList"></ul>
+
+  <h2>Add Movie</h2>
+  <form id="addMovieForm">
+    <input type="text" id="movieInput" placeholder="Enter movie title" required />
+    <button type="submit">Add Movie</button>
+  </form>
+
+  <script>
+    const movieList = document.getElementById('movieList');
+    const addForm = document.getElementById('addMovieForm');
+    const movieInput = document.getElementById('movieInput');
+    const searchBox = document.getElementById('searchBox');
+    let allMovies = []; // Store all movies for searching
+
+    // 获取所有电影
+    function getAllMovies() {
+      fetch('/movies')
+        .then(res => res.json())
+        .then(movies => {
+          allMovies = movies;  // 保存所有电影
+          renderMovieList(movies);  // 渲染电影列表
+        });
+    }
+
+    // 渲染电影列表
+    function renderMovieList(movies) {
+      movieList.innerHTML = '';
+      movies.forEach(movie => {
+        const li = document.createElement('li');
+        li.classList.add('movie-item');
+        li.innerHTML = `
+          ${movie.title}
+          <div class="buttons">
+            <button onclick="updateMovie(${movie.id}, '${movie.title}')">Update</button>
+            <button onclick="deleteMovie(${movie.id})">Delete</button>
+          </div>
+        `;
+        movieList.appendChild(li);
+      });
+    }
+
+    // 搜索电影
+    function searchMovies() {
+      const searchText = searchBox.value.toLowerCase();
+      const filteredMovies = allMovies.filter(movie => movie.title.toLowerCase().includes(searchText));
+      renderMovieList(filteredMovies);  // 渲染过滤后的电影列表
+    }
+
+    // 添加电影
+    addMovieForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const title = movieInput.value.trim();
+      if (!title) return;
+
+      fetch('/movies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title })
+      })
+      .then(res => res.json())
+      .then(() => {
+        movieInput.value = '';  // 清空输入框
+        getAllMovies();         // 刷新列表
+      });
+    });
+
+    // 更新电影
+    function updateMovie(id, currentTitle) {
+      const newTitle = prompt("Enter new title:", currentTitle);
+      if (!newTitle) return;
+
+      fetch(`/movies/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle })
+      })
+      .then(() => getAllMovies());
+    }
+
+    // 删除电影
+    function deleteMovie(id) {
+      if (!confirm('Are you sure you want to delete this movie?')) return;
+
+      fetch(`/movies/${id}`, {
+        method: 'DELETE'
+      })
+      .then(() => getAllMovies());
+    }
+
+    // 页面加载时获取所有电影
+    getAllMovies();
+  </script>
+</body>
+</html>
